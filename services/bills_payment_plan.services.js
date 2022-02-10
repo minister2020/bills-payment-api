@@ -8,8 +8,7 @@ const createPlanCategories = async (data) =>{
     
     return axios({
         method: "post",
-        url: `${process.env.PAYSTACK_BASE_URL}/plan/create`,
-        path: 'plan',
+        url: `${process.env.PAYSTACK_BASE_URL}/plan`,
         headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
@@ -23,21 +22,37 @@ const createPlanCategories = async (data) =>{
     })
 }
 
-const getListPlan = async (page)=>{
-    
-    return axios({
-        method: "Get",
-        url: `${process.env.PAYSTACK_BASE_URL}/${page}`,
-        path: 'plan',
-        headers: {
-         
-            "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
-        }
+const getListPlan = async (perPage, page)=>{
 
-    })
+    return axios({
+        method: "get",
+        url: `${process.env.PAYSTACK_BASE_URL}/plan?perPage=${perPage}&page=${page}`,
+        headers: {
+            
+            "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+        },
+
+
+})
+
+}
+const getFetchPlan = async (id )=>{
+
+    return axios({
+        method: "get",
+        url: `${process.env.PAYSTACK_BASE_URL}/plan/id`,
+        headers: {
+            
+            "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+        },
+
+
+})
+
 }
 
 module.exports = {
     createPlanCategories,
-    getListPlan
+    getListPlan,
+    getFetchPlan
 }

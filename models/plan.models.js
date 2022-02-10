@@ -1,85 +1,45 @@
-require('dotenv').config()
-const Joi = require('joi')
-const { v4: uuidv4 } = require('uuid')
-const planService = require('../services/bills_payment_plan.services')
-const planModel = require('../models/plan.models')
+const mysqlConnection = require('../config/mysql')
 
 
 
-
-
-const createPlan = async(req, res) =>{
-    const {  name, amount, interval } = req.body
-
-    const planSchema = Joi.object({
-        name: Joi.string().required(),
-        amount: Joi.string().required(),
-        interval: Joi.number().required()
-     
-    })
-    try {
-        const responseFromJoiValidation = planSchema.validate(req.body)
-            if (responseFromJoiValidation.error) {
-                throw new Error("Bad request")
-            }
-            const planResponse = await planService.createPlanCategories(req.body)
-            
-            if (planResponse.data.status == false) {
-                throw new Error("Sorry, plan cannot be creayed ")
-                 
-             }
-
-        res.status(200).send({
-            status: true,
-            message: "plan  successfully created",
-            data: planResponse.data.data
-        })
-    }
-        catch(e) {
-           
-            res.status(400).send({
-                status: false,
-                message:   e.message || msgClass.GeneralError
-    
-         })
+const createNewPlan = async (data) => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query({
+            sql: `INSERT into plan(name,amount,,interval) VALUES(?,?,?)`,
+            values: [data.name, data.amount, data.interval, ]
         }
+            , (err, results, fields) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(results);
+            })
+    })
+    
 }
 
 
-    
-
-
-const listPlan = async (req, res) => {
-   
-    
-         const { page } = req.params
-        
-        
-        try {
-            const getAllPlan = await planService.getListPlan()
-            
-            res.status(200).send({
-                status: true,
-                message: msgClass.getAllPlan,
-                data: getAllPlan.data.data
-            })
-        } catch (e) {
-    
-            res.status(400).send({
-                status: false,
-                message: e.message,
-                data: []
-            })
+const updatePlan =   async (data) => {
+    return new Promise( (resolve, reject) => {
+        mysqlConnection.query({
+            sql: `update plan set name=?, amount=?,interval=?, where sn=?`,
+            values: [data.name, data.amount, data.interval, data.sn]
         }
-        
-    
-    
-    }
+         ,  (err, results, fields) => {
+             if (err) {
+               reject(err);
+             }
+             resolve(results);
+         })
+      })
+ 
+
+}
 
 
 
 
 module.exports = {
-    createPlan,
-    listPlan
+    createNewPlan,
+    updatePlan
 }
