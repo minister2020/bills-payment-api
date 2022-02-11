@@ -51,8 +51,28 @@ const getFetchPlan = async (id )=>{
 
 }
 
+
+const updatePaymentPlan = async (data) =>{
+    
+    return axios({
+        method: "post",
+        url: `${process.env.PAYSTACK_BASE_URL}/plan/id`,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+        },
+        data: {
+            "name": data.name,
+            "amount": parseFloat(data.amount) * 100,
+            "interval": data.interval
+          
+        }
+    })
+}
+
 module.exports = {
     createPlanCategories,
     getListPlan,
-    getFetchPlan
+    getFetchPlan,
+    updatePaymentPlan
 }
