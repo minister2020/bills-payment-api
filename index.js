@@ -13,7 +13,8 @@ const planRoutes = require('./routes/bills_payment_plan.routes')
 const port = process.env.PORT
 
 // parse application/json
-app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended : true}));
+app.use(bodyParser.json());
 
 
 app.listen(port, () => {

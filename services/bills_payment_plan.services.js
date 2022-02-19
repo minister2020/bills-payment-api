@@ -4,7 +4,7 @@ const axios = require('axios').default
 
 
 
-const createPlanCategories = async (data) =>{
+const createNewPlan = async (data) =>{
     
     return axios({
         method: "post",
@@ -15,18 +15,18 @@ const createPlanCategories = async (data) =>{
         },
         data: {
             "name": data.name,
-            "amount": parseFloat(data.amount) * 100,
+            "amount": data.amount,
             "interval": data.interval
           
         }
     })
 }
 
-const getListPlan = async (perPage, page)=>{
+const getListPlan = async (data)=>{
 
     return axios({
         method: "get",
-        url: `${process.env.PAYSTACK_BASE_URL}/plan?perPage=${perPage}&page=${page}`,
+        url: `${process.env.PAYSTACK_BASE_URL}/plan?perPage=${data.perPage}&page=${data.page}`,
         headers: {
             
             "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
@@ -40,7 +40,7 @@ const getFetchPlan = async (id )=>{
 
     return axios({
         method: "get",
-        url: `${process.env.PAYSTACK_BASE_URL}/plan/id`,
+        url: `${process.env.PAYSTACK_BASE_URL}/plan/:id`,
         headers: {
             
             "Authorization": `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
@@ -52,10 +52,10 @@ const getFetchPlan = async (id )=>{
 }
 
 
-const updatePaymentPlan = async (data) =>{
+const updatePaymentPlan = async (data, id) =>{
     
     return axios({
-        method: "post",
+        method: "put",
         url: `${process.env.PAYSTACK_BASE_URL}/plan/id`,
         headers: {
             "Content-Type": "application/json",
@@ -63,15 +63,16 @@ const updatePaymentPlan = async (data) =>{
         },
         data: {
             "name": data.name,
-            "amount": parseFloat(data.amount) * 100,
+            "amount": parseFloat(data.amount),
             "interval": data.interval
           
-        }
+        },
+        
     })
 }
 
 module.exports = {
-    createPlanCategories,
+    createNewPlan,
     getListPlan,
     getFetchPlan,
     updatePaymentPlan

@@ -1,49 +1,63 @@
 require('dotenv').config()
 const Joi = require('joi')
 const { v4: uuidv4 } = require('uuid')
-const planService = require('../services/bills_payment_plan.services')
+const planResponse= require('../services/bills_payment_plan.services')
 const planModel = require('../models/plan.models')
 const msgClass = require('../errors/error')
+const { isEmpty, doSomeAsyncMagik } = require('../utils/utils')
+const planService = require('../services/bills_payment_plan.services')
 
 
 
 
 
-const createPlan = async(req, res) =>{
-    const {  name, amount, interval } = req.body
+
+const createPlan = async (req, res) => {
+
+   let {name, amount, interval} = req.body
+//console.log("here: " ,(req.body))
+
 
     const planSchema = Joi.object({
         name: Joi.string().required(),
         amount: Joi.string().required(),
-        interval: Joi.string().valid("weekly", "monthly").required()
+        interval: Joi.string().valid( 'daily','weekly', 'monthly', 'biannually', 'annually').required()
      
     })
-    try {
-        const responseFromJoiValidation = planSchema.validate(req.body)
-            if (responseFromJoiValidation.error) {
-                console.log("i enterered here", responseFromJoiValidation.error)
-                throw new Error("Bad request")
+
+  //  console.log("node got here1")
+    const responseFromJoiValidation = planSchema.validate({
+        "name": "data",
+        "amount": "1000",
+        "interval": "monthly"})
+    //console.log("node got here2", responseFromJoiValidation)
+        if (responseFromJoiValidation.error) {
+            throw new Error("Bad request")
+        }
+    
+        
+    try{
+        
+         const [err, createNewPlanResponse] = await doSomeAsyncMagik(planResponse.createNewPlan(req.body))
+             if(err){
+                throw new Error("Internal Error") 
+            
             }
-            console.log("before payatsck call")
-            const planResponse = await planService.createPlanCategories(req.body)
-            console.log("here: ", JSON.stringify(planResponse))
-               
-            if (planResponse.data.status == false) {
-               throw new Error("Sorry, plan cannot be creayed ")
+            if (createNewPlanResponse.data.status == false) {
+                throw new Error("Sorry, plan cannot be created this moment")
                  
              }
-
-        res.status(200).send({
-            status: true,
-            message: "plan successfully created",
-            data: planResponse.data
-        })
+            res.status(200).send({
+                status: true,
+                message: "plan successfully created",
+                data: createNewPlanResponse.data.data
+            })
     }
-        catch(e) {
+        catch(err) {
            
             res.status(400).send({
                 status: false,
-                message:   e.message || msgClass.GeneralError
+                message:  "ERROR"
     
          })
         }
@@ -54,22 +68,26 @@ const createPlan = async(req, res) =>{
 
 
     const listPlan = async (req, res) => {
-    const perPage = req.query.perPage || 50
-    const page = req.query.page || 1
+        let { perPage, page } = req.query
+         perPage = req.query.perPage || 50
+         page = req.query.page || 1
         
             
   try{
-     const listAllPlan = await planService.getListPlan(req, res)
-     console.log('am here', JSON.stringify(listAllPlan))
+     const[err, listAllPlan ] = await doSomeAsyncMagik(planService.getListPlan(req.query))
+    // console.log('am here', listAllPlan)
+     if(err){
+         throw new Error('sorry this is on us')
+     }
         
-    if (listAllPlan.data.status == false) {
+    if (listAllPlan.data.status != true) {
         throw new Error("Sorry, plan cannot be fetch ")
             
         }
 
     res.status(200).send({
     status: true,
-    message: "plan successfully fetch",
+    message: listAllPlan.data.message,
     data: listAllPlan.data.data
     })
     }
@@ -77,8 +95,8 @@ const createPlan = async(req, res) =>{
 
     res.status(400).send({
         status: false,
-        message:  msgClass.GeneralError ||err.message,
-        data: null
+        message:  err.message
+        
 
     })
     }
@@ -90,7 +108,7 @@ const fetchPlan = async (req, res) => {
         
             
   try{
-     const fetchAllPlan = await planService.getFetchPlan( id)
+     const fetchAllPlan = await planService.getFetchPlan( id )
 
         
     if (fetchAllPlan.data.status == false) {
@@ -121,22 +139,31 @@ const fetchPlan = async (req, res) => {
 
 const updatePlan = async(req, res) =>{
     const {  name, amount, interval } = req.body
+    const { id } = req.params
+//console.log("here: ", req.body)
 
     const planSchema = Joi.object({
         name: Joi.string().required(),
         amount: Joi.string().required(),
-        interval: Joi.string().valid( "daily","weekly", "monthly").required()
+        interval: Joi.string().valid( "daily","weekly", "monthly", "biannually","annually").required()
      
     })
-    try {
-        const responseFromJoiValidation = planSchema.validate(req.body)
+    
+        const responseFromJoiValidation = planSchema.validate({
+            "name": "data",
+            "amount": "1000",
+            "interval": "monthly"})
             if (responseFromJoiValidation.error) {
              
                 throw new Error("Bad request")
             }
-            
-            const planResponse = await planService.updatePaymentPlan(req.body)
-           
+
+          try{  
+            const [err, planResponse ] = await doSomeAsyncMagik( planService.updatePaymentPlan(req.body, req.params))
+         console.log('here', planResponse)
+            if(err){
+               throw new Error('sorry, we will fix this')
+           }
                
             if (planResponse.data.status == false) {
                throw new Error("Sorry, plan cannot be updated ")
@@ -146,7 +173,7 @@ const updatePlan = async(req, res) =>{
         res.status(200).send({
             status: true,
             message: "plan successfully updated",
-            data: planResponse.data
+            data: planResponse.data.data
         })
     }
         catch(e) {
